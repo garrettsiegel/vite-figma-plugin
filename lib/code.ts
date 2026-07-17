@@ -1,43 +1,84 @@
 /// <reference types="@figma/plugin-typings" />
-import boxes from './boxes';
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
+import { isUIMessage, type PluginMessage } from '@shared/messages'
 
-// This file holds the main code for plugins. Code in this file has access to
-// the *figma document* via the figma global object.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
-
-// This shows the HTML page in "ui.html".
 figma.showUI(__html__, {
-  height: 600,
-  width: 400,
-});
+  width: 360,
+  height: 440,
+  themeColors: true,
+})
 
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the
-// posted message.
-// figma.ui.onmessage =  (msg: {type: string, count: number}) => {
-//   // One way of distinguishing between different types of messages sent from
-//   // your HTML page is to use an object with a "type" property like this.
-//   if (msg.type === 'create-shapes') {
-//     // This plugin creates rectangles on the screen.
-//     const numberOfRectangles = msg.count;
+function createRectangles(count: number, nodes: SceneNode[]): SceneNode[] {
+  const size = 100
+  const gap = 24
+  const columns = Math.min(5, Math.ceil(Math.sqrt(count)))
+  const rows = Math.ceil(count / columns)
+  const gridWidth = columns * size + (columns - 1) * gap
+  const gridHeight = rows * size + (rows - 1) * gap
+  const originX = figma.viewport.center.x - gridWidth / 2
+  const originY = figma.viewport.center.y - gridHeight / 2
 
-//     const nodes: SceneNode[] = [];
-//     for (let i = 0; i < numberOfRectangles; i++) {
-//       const rect = figma.createRectangle();
-//       rect.x = i * 150;
-//       rect.fills = [{ type: 'SOLID', color: { r: 1, g: 0.5, b: 0 } }];
-//       figma.currentPage.appendChild(rect);
-//       nodes.push(rect);
-//     }
-//     figma.currentPage.selection = nodes;
-//     figma.viewport.scrollAndZoomIntoView(nodes);
-//   }
+  for (let index = 0; index < count; index += 1) {
+    const rectangle = figma.createRectangle()
+    nodes.push(rectangle)
+    rectangle.name = `Rectangle ${index + 1}`
+    rectangle.x = originX + (index % columns) * (size + gap)
+    rectangle.y = originY + Math.floor(index / columns) * (size + gap)
+    rectangle.resize(size, size)
+    rectangle.cornerRadius = 12
+    rectangle.fills = [{ type: 'SOLID', color: { r: 1, g: 0.45, b: 0.1 } }]
+  }
 
-//   // Make sure to close the plugin when you're done. Otherwise the plugin will
-//   // keep running, which shows the cancel button at the bottom of the screen.
-//   figma.closePlugin();
-// };
-boxes();
+  return nodes
+}
+
+function rollbackCreate(nodes: SceneNode[], previousSelection: SceneNode[]) {
+  for (let index = nodes.length - 1; index >= 0; index -= 1) {
+    try {
+      if (!nodes[index].removed) {
+        nodes[index].remove()
+      }
+    } catch (error) {
+      console.error('Failed to remove a partially created rectangle.', error)
+    }
+  }
+
+  try {
+    figma.currentPage.selection = previousSelection
+  } catch (error) {
+    console.error('Failed to restore the previous selection.', error)
+  }
+}
+
+figma.ui.onmessage = (message: unknown) => {
+  if (!isUIMessage(message)) {
+    return
+  }
+
+  if (message.type === 'cancel') {
+    figma.closePlugin()
+    return
+  }
+
+  const previousSelection = [...figma.currentPage.selection]
+  const nodes: SceneNode[] = []
+
+  try {
+    createRectangles(message.count, nodes)
+    figma.currentPage.selection = nodes
+    figma.viewport.scrollAndZoomIntoView(nodes)
+    figma.commitUndo()
+  } catch (error) {
+    console.error('Failed to create rectangles.', error)
+    rollbackCreate(nodes, previousSelection)
+
+    const response: PluginMessage = { type: 'shapes-creation-failed' }
+    figma.ui.postMessage(response)
+    return
+  }
+
+  const response: PluginMessage = {
+    type: 'shapes-created',
+    count: nodes.length,
+  }
+  figma.ui.postMessage(response)
+}

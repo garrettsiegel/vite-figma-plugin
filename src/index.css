@@ -1,6 +1,54 @@
-* {
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  font-family: var(--font-sans);
+  color: var(--figma-color-text, #1e1e1e);
+  background: var(--figma-color-bg, #ffffff);
+
+  --plugin-bg: var(--figma-color-bg, #ffffff);
+  --plugin-bg-secondary: var(--figma-color-bg-secondary, #f5f5f5);
+  --plugin-bg-hover: var(--figma-color-bg-hover, #e6e6e6);
+  --plugin-text: var(--figma-color-text, #1e1e1e);
+  --plugin-text-secondary-base: var(--figma-color-text-secondary, #5c5c5c);
+  --plugin-text-secondary: color-mix(
+    in srgb,
+    var(--plugin-text-secondary-base) 70%,
+    var(--plugin-text) 30%
+  );
+  --plugin-text-onbrand: var(--figma-color-text-onbrand, #ffffff);
+  --plugin-border: var(--figma-color-border, #e6e6e6);
+  --plugin-border-strong: var(--figma-color-border-strong, #b3b3b3);
+  --plugin-brand: var(--figma-color-bg-brand-secondary, #0b57d0);
+  --plugin-brand-hover: color-mix(
+    in srgb,
+    var(--plugin-brand) 82%,
+    #000000 18%
+  );
+  --plugin-focus: var(--figma-color-border-brand-strong, #0055cc);
+  --plugin-focus-muted: color-mix(
+    in srgb,
+    var(--figma-color-border-brand-strong, #0055cc) 24%,
+    transparent
+  );
+  --plugin-error-base: var(--figma-color-text-danger, #b42318);
+  --plugin-error: color-mix(
+    in srgb,
+    var(--plugin-error-base) 80%,
+    var(--plugin-text) 20%
+  );
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: sans-serif;
+}
+
+button,
+input {
+  font: inherit;
 }
