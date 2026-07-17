@@ -1,5 +1,6 @@
 {
   "name": "vite-figma-plugin",
+  "description": "Figma plugin template: React 19 + TypeScript + Tailwind v4 UI via Vite, esbuild sandbox bundle, strict two-file dist contract.",
   "private": true,
   "version": "1.0.0",
   "license": "MIT",

@@ -1,7 +1,8 @@
 # Figma Plugin Template Closeout
 
-Status snapshot: July 17, 2026. This file tracks the final hardening and release
-of the reusable template; checked items were verified before this hardening pass.
+Status snapshot: July 17, 2026. A full file-by-file review pass found no
+functional defects; the remaining work is publication, not redesign. This file
+tracks the final closeout and the decisions that shaped it.
 
 ## Locked contract
 
@@ -14,34 +15,35 @@ of the reusable template; checked items were verified before this hardening pass
 - Vitest covers durable logic; no browser transport mock, jsdom, or Testing Library.
 - MIT-licensed repository published as a GitHub template.
 
-## Baseline verified — July 17, 2026
+## Decisions (July 17, 2026 review)
 
-- [x] npm install, formatting, type-checking, and linting passed.
-- [x] Production build emitted only `dist/code.js` and `dist/index.html`.
-- [x] The UI was self-contained and the sandbox bundle passed `node --check`.
-- [x] UI-only and sandbox-only watch edits rebuilt while preserving both artifacts.
-- [x] Shared guards, count normalization, Tailwind theming, and the rectangle round trip landed.
+- **Watch mode keeps always-on file polling.** `scripts/watch-ui.mjs` forces
+  `usePolling` because native FSEvents can be dropped in sandboxed or
+  containerized filesystems. Reliability across all environments was chosen over
+  the small constant CPU cost; the tradeoff is documented in the script comment.
+- **Publication is agent-driven** via the `gh` CLI (push, watch CI, enable
+  template mode, set metadata). Figma Desktop runtime acceptance stays manual.
 
-## Hardening implementation
+## Verified before publication
 
-- [x] Upgrade the supported Node/Vite/React/TypeScript toolchain and declare engines.
-- [x] Improve UI sizing, spacing, fallbacks, focus states, and error presentation.
-- [x] Center created grids and add rollback, selection restoration, and separate undo boundaries.
-- [x] Add the typed `shapes-creation-failed` sandbox-to-UI response.
-- [x] Refactor artifact verification to parse scripts, HTML, and the root manifest.
-- [x] Add Vitest coverage for messages, the mocked Figma runtime, and artifact fixtures.
-- [x] Add the Node 22/24 GitHub Actions matrix with read-only repository permissions.
-- [x] Finish README, Node metadata, MIT license, and template-ready project metadata.
+- [x] `npm run check` passes: format check, lint, Vitest, `tsc -b`, production build, `verify:dist`.
+- [x] Production build emits only `dist/code.js` and `dist/index.html`.
+- [x] The UI is self-contained and the sandbox bundle is valid classic-script JavaScript.
+- [x] Shared guards, count normalization, Tailwind theming, and the rectangle round trip covered by tests.
+- [x] Hygiene: `.firecrawl` git-ignored; `package.json` carries a description.
 
-## Automated acceptance
+## Publication (agent-driven)
 
-- [x] `npm ci` succeeds from a clean source copy on supported Node versions.
-- [x] `npm run check` passes formatting, linting, tests, type-checking, and production build.
-- [x] `npm audit --audit-level=high` reports no high-or-higher findings.
-- [x] Watch smoke tests pass after separate `src/` and `lib/` edits.
+- [ ] Commit closeout changes and push `main`.
 - [ ] GitHub Actions passes on Node 22 and Node 24.
+- [ ] Enable GitHub template mode; set description and topics via `gh repo edit`.
+- [ ] Resolve the stale `feature/tailwind` remote branch (delete if merged, else park for review).
+- [ ] Confirm a fresh `degit` copy passes `npm install && npm run check`.
 
-## Figma Desktop acceptance
+## Figma Desktop acceptance — owner: Garrett
+
+These require the Figma Desktop app and cannot be automated. Run after the
+`main` push lands.
 
 - [ ] Import the root manifest and run without console errors.
 - [ ] Verify the UI and keyboard focus in light and dark themes.
@@ -53,8 +55,15 @@ of the reusable template; checked items were verified before this hardening pass
 - [ ] Confirm UI and sandbox edits restart the plugin with hot reload enabled.
 - [ ] Repeat final runtime checks with Developer VM disabled.
 
-## Publication
+## Deliberately not doing (anti-overengineering guardrails)
 
-- [ ] Commit the completed scaffold and hardening changes.
-- [ ] Push `main` and verify the GitHub Actions run completes successfully.
-- [ ] Enable GitHub template mode and verify the remote template and MIT license metadata.
+Future agents should not "improve" the template into bloat. These omissions are
+intentional:
+
+- No jsdom / Testing Library UI tests — excluded by the locked contract.
+- No pnpm / monorepo-workspace migration — npm standalone is the template's identity.
+- No `npm audit` step in CI — flaky on new advisories; verified manually instead.
+- No manifest placeholder-ID scheme — the README and "CHANGE ME" name cover it, and `verify-dist` requires a numeric ID.
+- No button-disabling / pending state in `Count.tsx` — the sandbox responds synchronously.
+- No changes to grid layout math, rollback logic, or the verifier — all reviewed, correct, and tested.
+- No CHANGELOG or release tooling.
