@@ -34,11 +34,15 @@ tracks the final closeout and the decisions that shaped it.
 
 ## Publication (agent-driven)
 
-- [ ] Commit closeout changes and push `main`.
-- [ ] GitHub Actions passes on Node 22 and Node 24.
-- [ ] Enable GitHub template mode; set description and topics via `gh repo edit`.
-- [ ] Resolve the stale `feature/tailwind` remote branch (delete if merged, else park for review).
-- [ ] Confirm a fresh `degit` copy passes `npm install && npm run check`.
+- [x] Commit closeout changes and push `main`.
+- [x] GitHub Actions passes on Node 22 and Node 24.
+- [x] Enable GitHub template mode; set description and topics via `gh repo edit`.
+- [ ] Resolve the stale `feature/tailwind` remote branch. Owner: Garrett. It is
+      not an ancestor of `main` — one commit ("tailwind setup") that predates and
+      is superseded by the current Tailwind v4 integration. Delete
+      (`git push origin --delete feature/tailwind`) once you confirm nothing on it
+      is worth keeping.
+- [x] Confirm a fresh `degit` copy passes `npm install && npm run check` (110 tests, build, verify all green).
 
 ## Figma Desktop acceptance — owner: Garrett
 
